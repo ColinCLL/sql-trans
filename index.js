@@ -8,6 +8,8 @@ function tokenizer(input) {
   let tokens = [], current = 0;
 
   console.log(input.length)
+  console.log(input[48])
+  console.log(input[49])
   while (current < input.length) {
     let char = input[current];
     // 匹配空字符和逗号, 空字符和逗号不重要可以忽略
@@ -17,11 +19,11 @@ function tokenizer(input) {
 			continue;
     }
     var LETTERS = /[a-z]/i;
-		if (LETTERS.test(char)) {
+		if (char && LETTERS.test(char)) {
 			var value = "";
 
 			// 同样，我们用一个循环遍历所有的字母，把它们存入 value 中。
-			while (LETTERS.test(char)) {
+			while (char && LETTERS.test(char)) {
 				value += char;
 				char = input[++current];
 			}
@@ -42,7 +44,6 @@ function tokenizer(input) {
       });
       current++;
     }
-    console.log(current)
   }
   return tokens
 }
