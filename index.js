@@ -1,6 +1,7 @@
 let input= "select name, version form table where name = test"
 
 /**
+ * 词法分析器
  * @param {String} input 
  * @return {Array} tokens
  */
@@ -8,8 +9,6 @@ function tokenizer(input) {
   let tokens = [], current = 0;
 
   console.log(input.length)
-  console.log(input[48])
-  console.log(input[49])
   while (current < input.length) {
     let char = input[current];
     // 匹配空字符和逗号, 空字符和逗号不重要可以忽略
@@ -48,10 +47,61 @@ function tokenizer(input) {
   return tokens
 }
 
+/**
+ * 判断是否是关键字
+ * @param {String} word 
+ * @return {Boolean}
+ */
 function isKey(word) {
   let keys = ["select", "form", "where"]
   return keys.indexOf(word) != -1;
 }
 
+
+/**
+ * 语法分析器
+ * @param {Array} tokens 
+ * @return {Object}
+ */
+function parser(tokens) {
+  let current = 0;
+
+  function chain() {
+    let token = tokens[current];
+
+    // 一个
+    if (token.type == "key" && token.value == "select") {
+      token = tokens[++current];
+      let node = {
+        type: "ChainNode",
+        value: "select",
+        param: []
+      }
+
+      while(!(token.type == "key" && token.value == "from")) {
+        console.log(token)
+        node.param.push(chain());
+        token = tokens[current];
+      }
+      return node
+    }
+
+    if (token.type == "word") {
+      current++;
+      return {
+        type: "word",
+        value: token.value
+      }
+    }
+  }
+  return chain();
+}
+
+
+
+
+
 let tokens = tokenizer(input)
 console.log(JSON.stringify(tokens, null, 2));
+let p = parser(tokens)
+console.log(JSON.stringify(p, null, 2));
