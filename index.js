@@ -1,4 +1,4 @@
-let input= "select name, version form table where name = test"
+let input= "select name, version from table where name = test"
 
 /**
  * 词法分析器
@@ -53,7 +53,7 @@ function tokenizer(input) {
  * @return {Boolean}
  */
 function isKey(word) {
-  let keys = ["select", "form", "where"]
+  let keys = ["select", "from", "where"]
   return keys.indexOf(word) != -1;
 }
 
@@ -79,17 +79,32 @@ function parser(tokens) {
       }
 
       while(!(token.type == "key" && token.value == "from")) {
-        console.log(token)
         node.param.push(chain());
         token = tokens[current];
       }
       return node
     }
 
+    if (token.type == "key" && token.value == "from") {
+      current++;
+      return {
+        type: "key",
+        value: token.value
+      }
+    }
+
     if (token.type == "word") {
       current++;
       return {
         type: "word",
+        value: token.value
+      }
+    }
+
+    if (token.type == "operator") {
+      current++;
+      return {
+        type: "operator",
         value: token.value
       }
     }
