@@ -109,7 +109,12 @@ function parser(tokens) {
       }
     }
   }
-  return chain();
+  let ast = []
+  while (current < tokens.length) {
+    ast.push(chain())
+    current++;
+  }
+  return ast;
 }
 
 
