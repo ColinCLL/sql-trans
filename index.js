@@ -69,11 +69,11 @@ function parser(tokens) {
   function chain() {
     let token = tokens[current];
 
-    // 一个
+
     if (token.type == "key" && token.value == "select") {
       token = tokens[++current];
       let node = {
-        type: "ChainNode",
+        type: "key",
         value: "select",
         param: []
       }
@@ -85,7 +85,38 @@ function parser(tokens) {
       return node
     }
 
+    if (token.type == "key" && token.value == "where") {
+      token = tokens[++current];
+      let node = {
+        type: "key",
+        value: "where",
+        param: [],
+      }
+      while(token && token.type != "key") {
+        node.param.push(chain());
+        token = tokens[current];
+      }
+      return node;
+    }
+
     if (token.type == "key" && token.value == "from") {
+      token = tokens[++current];
+      let node = {
+        type: "key",
+        value: "from",
+        param: [],
+      }
+      while(token && token.type != "key") {
+        node.param.push(chain());
+        token = tokens[current];
+      }
+      return node;
+    }
+
+
+
+    // 通用的key
+    if (token.type == "key") {
       current++;
       return {
         type: "key",
@@ -109,19 +140,44 @@ function parser(tokens) {
       }
     }
   }
-  let ast = []
+  let ast = {
+    type: "ChainNode",
+    value: "select",
+    param:[]
+  }
   while (current < tokens.length) {
-    ast.push(chain())
-    current++;
+    ast.param.push(chain())
   }
   return ast;
 }
 
 
-
+/**
+ * 代码生成器
+ * @param {object} node 节点
+ */
+function codeGenerator(ast) {
+  let code = {};
+  function nodeCode(node) {
+    if(node.type == "ChainNode") {
+      node.param.map(n => {
+        nodeCode(n)
+      })
+    }
+    if (node.type == "key" && node.value == "select") {
+      let selectNode = code["select"] = {}
+      node.param
+    }
+  }
+  nodeCode(ast);
+  return code
+}
 
 
 let tokens = tokenizer(input)
-console.log(JSON.stringify(tokens, null, 2));
-let p = parser(tokens)
-console.log(JSON.stringify(p, null, 2));
+// console.log(JSON.stringify(tokens, null, 2));
+let ast = parser(tokens)
+let code = codeGenerator(ast)
+
+console.log(JSON.stringify(ast, null, 2));
+console.log(JSON.stringify(code, null, 2));
