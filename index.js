@@ -159,14 +159,21 @@ function parser(tokens) {
 function codeGenerator(ast) {
   let code = {};
   function nodeCode(node) {
+
     if(node.type == "ChainNode") {
       node.param.map(n => {
         nodeCode(n)
       })
     }
+    // 处理select里面的内容
     if (node.type == "key" && node.value == "select") {
       let selectNode = code["select"] = {}
-      node.param
+      let col = {};
+      node.param.map(n => {
+        // 赋值
+        col[n.value] = n.value
+      })
+      selectNode["col"] = col;
     }
   }
   nodeCode(ast);
@@ -174,10 +181,10 @@ function codeGenerator(ast) {
 }
 
 
-let tokens = tokenizer(input)
+let tokens = tokenizer(input);
 // console.log(JSON.stringify(tokens, null, 2));
-let ast = parser(tokens)
-let code = codeGenerator(ast)
+let ast = parser(tokens);
+let code = codeGenerator(ast);
 
 console.log(JSON.stringify(ast, null, 2));
 console.log(JSON.stringify(code, null, 2));
