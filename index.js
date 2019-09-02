@@ -70,7 +70,7 @@ function parser(tokens) {
     let token = tokens[current];
 
 
-    if (token.type == "key" && token.value == "select") {
+    if (token.type === "key" && token.value === "select") {
       token = tokens[++current];
       let node = {
         type: "key",
@@ -78,14 +78,14 @@ function parser(tokens) {
         param: []
       }
 
-      while(!(token.type == "key" && token.value == "from")) {
+      while(!(token.type === "key" && token.value === "from")) {
         node.param.push(chain());
         token = tokens[current];
       }
       return node
     }
 
-    if (token.type == "key" && token.value == "where") {
+    if (token.type === "key" && token.value === "where") {
       token = tokens[++current];
       let node = {
         type: "key",
@@ -99,7 +99,7 @@ function parser(tokens) {
       return node;
     }
 
-    if (token.type == "key" && token.value == "from") {
+    if (token.type === "key" && token.value === "from") {
       token = tokens[++current];
       let node = {
         type: "key",
@@ -116,7 +116,7 @@ function parser(tokens) {
 
 
     // 通用的key
-    if (token.type == "key") {
+    if (token.type === "key") {
       current++;
       return {
         type: "key",
@@ -124,7 +124,7 @@ function parser(tokens) {
       }
     }
 
-    if (token.type == "word") {
+    if (token.type === "word") {
       current++;
       return {
         type: "word",
@@ -132,7 +132,7 @@ function parser(tokens) {
       }
     }
 
-    if (token.type == "operator") {
+    if (token.type === "operator") {
       current++;
       return {
         type: "operator",
@@ -160,21 +160,46 @@ function codeGenerator(ast) {
   let code = {};
   function nodeCode(node) {
 
-    if(node.type == "ChainNode") {
+    if(node.type === "ChainNode") {
       node.param.map(n => {
         nodeCode(n)
       })
     }
-    // 处理select里面的内容
-    if (node.type == "key" && node.value == "select") {
+
+    // 处理select
+    if (node.type === "key" && node.value === "select") {
       let selectNode = code["select"] = {}
       let col = {};
       node.param.map(n => {
-        // 赋值
         col[n.value] = n.value
       })
       selectNode["col"] = col;
     }
+
+    if (node.type === "key" && node.value === "from") {
+      code["from"] = "table"
+    }
+
+    if (node.type === "key" && node.value === "where") {
+      let funBody = ""
+      node.param.map(n => {
+        let nodeValue = ""
+        if (n.type === "operator") {
+          nodeValue = {
+            "and": "&&",
+            "or": "||",
+            "=": "=="
+          }[n.value]
+          funBody += nodeValue
+        } else {
+          nodeValue = n.value
+          funBody += `row.${nodeValue}`
+        }
+      })
+      code["where"] = new Function("row", "return " + funBody)
+    }
+
+
   }
   nodeCode(ast);
   return code
