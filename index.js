@@ -1,4 +1,4 @@
-let input= "select name, version from table where name = test"
+let jc = require("jcalculator")
 
 /**
  * 词法分析器
@@ -8,7 +8,6 @@ let input= "select name, version from table where name = test"
 function tokenizer(input) {
   let tokens = [], current = 0;
 
-  console.log(input.length)
   while (current < input.length) {
     let char = input[current];
     // 匹配空字符和逗号, 空字符和逗号不重要可以忽略
@@ -182,6 +181,7 @@ function codeGenerator(ast) {
 
     if (node.type === "key" && node.value === "where") {
       let funBody = ""
+      let isKey = true
       node.param.map(n => {
         let nodeValue = ""
         if (n.type === "operator") {
@@ -191,25 +191,53 @@ function codeGenerator(ast) {
             "=": "=="
           }[n.value]
           funBody += nodeValue
+          isKey = false
         } else {
           nodeValue = n.value
-          funBody += `row.${nodeValue}`
+          funBody += isKey ?  `row.${nodeValue}` : `'${nodeValue}'`
         }
       })
       code["where"] = new Function("row", "return " + funBody)
     }
-
-
   }
   nodeCode(ast);
   return code
 }
 
 
-let tokens = tokenizer(input);
-// console.log(JSON.stringify(tokens, null, 2));
-let ast = parser(tokens);
-let code = codeGenerator(ast);
+// let tokens = tokenizer(input);
+// // console.log(JSON.stringify(tokens, null, 2));
+// let ast = parser(tokens);
+// let code = codeGenerator(ast);
+// code.from = data
 
-console.log(JSON.stringify(ast, null, 2));
-console.log(JSON.stringify(code, null, 2));
+// let test = jc.sql(code)
+
+
+
+Array.prototype.sql = function(input){
+  let tokens = tokenizer(input);
+  // console.log(JSON.stringify(tokens, null, 2));
+  let ast = parser(tokens);
+  let code = codeGenerator(ast);
+  code.from = data = this
+  return jc.sql(code)
+}
+
+
+let data = [{
+  version: "1.0",
+  name: "test",
+  value: "233"
+}, {
+  version: "1.1",
+  name: "test1",
+  value: "666",
+}]
+
+let input= "select name, version, value from table where name = test"
+// console.log(JSON.stringify(ast, null, 2));
+// console.log(JSON.stringify(code, null, 2));
+// console.log(JSON.stringify(test, null, 2));
+
+console.log(JSON.stringify(data.sql(input), null, 2));
