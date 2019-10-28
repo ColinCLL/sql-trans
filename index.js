@@ -52,7 +52,7 @@ function tokenizer(input) {
  * @return {Boolean}
  */
 function isKey(word) {
-  let keys = ["select", "from", "where"]
+  let keys = ["select", "from", "where", "group", "by"]
   return keys.indexOf(word) != -1;
 }
 
@@ -103,6 +103,22 @@ function parser(tokens) {
       let node = {
         type: "key",
         value: "from",
+        param: [],
+      }
+      while(token && token.type != "key") {
+        node.param.push(chain());
+        token = tokens[current];
+      }
+      return node;
+    }
+
+    if (token.type === "key" && token.value === "group") {
+      if (tokens[current + 1].value !== "by") throw "Lack of keywords: 'by'"
+      current += 2;
+      token = tokens[current];
+      let node = {
+        type: "key",
+        value: "groupBy",
         param: [],
       }
       while(token && token.type != "key") {
@@ -179,6 +195,15 @@ function codeGenerator(ast) {
       code["from"] = "table"
     }
 
+
+    if (node.type === "key" && node.value === "groupBy") {
+      code["groupBy"] = [];
+
+      node.param.map(row => {
+        code["groupBy"].push(row.value);
+      })
+    }
+
     if (node.type === "key" && node.value === "where") {
       let funBody = ""
       let isKey = true
@@ -235,7 +260,7 @@ let data = [{
   value: "666",
 }]
 
-let input= "select name, version, value from table where name = test"
+let input= "select name, version, value from table where name = test group by time shop"
 // console.log(JSON.stringify(ast, null, 2));
 // console.log(JSON.stringify(code, null, 2));
 // console.log(JSON.stringify(test, null, 2));
