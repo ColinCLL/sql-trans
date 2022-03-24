@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "node ./index.js"
+  },
   "dependencies": {
     "jcalculator": "^1.3.1"
   }
